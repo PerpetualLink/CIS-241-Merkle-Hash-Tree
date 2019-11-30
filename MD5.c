@@ -1,4 +1,6 @@
-
+/*
+ * Simple MD5 implementation
+ *
  * Compile with: gcc -o md5 -O3 -lm md5.c
  */
 #include <stdio.h>
@@ -11,6 +13,7 @@
 
 // These vars will contain the hash
 uint8_t * concat(const char *s1, const uint8_t *s2);
+char * treeHash(char *inputHash[]);
 
 
 void md5(uint8_t *initial_msg, size_t initial_len) {
@@ -187,12 +190,10 @@ int main() {
 
     char *msg = "Tes1t";
     size_t len = strlen(msg);
-    int tempArray[10] = {"1","2","3","4","5","6","7","8","9","10"};
-    for (int i = 0; i < sizeof(tempArray); i++){
-
-
-
-    }
+    // next 3 lines break code comment out if you are doing anything
+    char *tempArray[11] = {"1","2","3","4","5","6","7","8","9","10"};
+    char *prt = treeHash(tempArray);
+    printf("%s",prt[0]);
 
 
 
@@ -215,4 +216,34 @@ uint8_t * concat(const char *s1, const uint8_t *s2)
 //    strcpy(result, s1);
 //    strcat(result, s2);
 //    return result;
+}
+
+
+//my attempt at hashing in tree order
+char * treeHash(char *inputHash[]){
+    char hash[ 30 ];
+    char *arrayHash[30];
+    int arrayCount=0;
+    if(sizeof(inputHash)/ sizeof(inputHash[0])==1){
+        return inputHash;
+    }
+    else{
+        for (int i =0; i < sizeof(inputHash)/ sizeof(char);i+=2){ //Still needs to account for odd array lenghts
+            char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i+1]) + 1);
+
+            strcpy(result, inputHash[i]);
+            strcat(result, inputHash[i+1]);
+            size_t len = strlen(result);
+            md5(result,len);
+            FILE *cfPtr;
+
+            cfPtr = fopen( "thisHash.txt", "r" );
+            fscanf(cfPtr, "%29s\n", hash);
+            strcpy(arrayHash[arrayCount], hash);
+            arrayCount++;
+        }
+        return treeHash(arrayHash);
+
+    }
+
 }
