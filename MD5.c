@@ -13,10 +13,10 @@
 
 // These vars will contain the hash
 uint8_t * concat(const char *s1, const uint8_t *s2);
-char * treeHash(char *inputHash[]);
+void treeHash(char *inputHash[],int size);
+void arrayPopulation(char *, int size);
 
-
-void md5(uint8_t *initial_msg, size_t initial_len) {
+void md5(uint8_t *initial_msg, size_t initial_len, int WA) {
 
     // Message (to prepare)
     uint32_t h0, h1, h2, h3;
@@ -163,8 +163,10 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
     // display result
     char finalHash[255]="";
     FILE *hashFile;
-    hashFile = fopen("./thisHash.txt","w");
-
+    if(! WA)
+        hashFile = fopen("./thisHash.txt","w");
+    else
+        hashFile = fopen("./thisHash.txt", "a");
 
     p=(uint8_t *)&h0;
     fprintf( hashFile,"%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3],h0);
@@ -176,7 +178,7 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
     fprintf(hashFile,"%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], h2);
 
     p=(uint8_t *)&h3;
-    fprintf(hashFile,"%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], h3);
+    fprintf(hashFile,"%2.2x%2.2x%2.2x%2.2x\n", p[0], p[1], p[2], p[3], h3);
 
     puts("");
 
@@ -191,20 +193,23 @@ int main() {
     char *msg = "Tes1t";
     size_t len = strlen(msg);
     // next 3 lines break code comment out if you are doing anything
-    char *tempArray[11] = {"1","2","3","4","5","6","7","8","9","10"};
-    char *prt = treeHash(tempArray);
-    printf("%s",prt[0]);
+    char *tempArray[] = {"1","2","3","4","90","6","7","8","9","68", "44", "43"};
+    printf("%d\n", sizeof(tempArray));
+    int size = sizeof(tempArray)/ sizeof(tempArray[0]);
+    treeHash(tempArray,size);
+    arrayPopulation("./thisHash.txt", 6);
+   // printf("%d\n", sizeof(tempArray));
 
 
 
     // benchmark
     // int i;
     // for (i = 0; i < 1000000; i++) {
-        md5(msg, len);
+        //md5(msg, len);
     // }
 
     //var char digest[16] := h0 append h1 append h2 append h3 //(Output is in little-endian)
-    uint8_t *p;
+    //uint8_t *p;
 
     // display result
 
@@ -217,33 +222,105 @@ uint8_t * concat(const char *s1, const uint8_t *s2)
 //    strcat(result, s2);
 //    return result;
 }
-
-
 //my attempt at hashing in tree order
-char * treeHash(char *inputHash[]){
-    char hash[ 30 ];
-    char *arrayHash[30];
-    int arrayCount=0;
-    if(sizeof(inputHash)/ sizeof(inputHash[0])==1){
-        return inputHash;
+void treeHash(char *inputHash[],int size) {
+    char hash[32] = "";
+    char *arrayHash[size - 1];
+    printf("Size: %d\n", size);
+    int arrayCount = 0;
+    int num = sizeof(*inputHash) / sizeof(inputHash[0]);
+    //printf("%d\n",num);
+    //printf("%d\n",sizeof(inputHash));
+    //printf("%d\n",sizeof(char));
+    puts("HELLO");
+    if (size == 1) {
+        puts("HELLO2");
+        printf("This is last hash %s", inputHash[0]);
+        return;
     }
-    else{
-        for (int i =0; i < sizeof(inputHash)/ sizeof(char);i+=2){ //Still needs to account for odd array lenghts
-            char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i+1]) + 1);
 
+    if (size % 2 == 0) {
+        for (int i = 0; i < size - 1; i += 2) { //Still needs to account for odd array lenghts
+            char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i + 1]) + 1);
             strcpy(result, inputHash[i]);
-            strcat(result, inputHash[i+1]);
+            strcat(result, inputHash[i + 1]);
+            printf("Result?: %s\n", result);
             size_t len = strlen(result);
-            md5(result,len);
-            FILE *cfPtr;
+            md5(result, len, i);
+        }
+    }
+}
 
-            cfPtr = fopen( "thisHash.txt", "r" );
-            fscanf(cfPtr, "%29s\n", hash);
-            strcpy(arrayHash[arrayCount], hash);
+void arrayPopulation(char *str, int size){
+        FILE* inFile;
+    unsigned char content[255];
+    unsigned char fileStuff[size][64];
+    unsigned char result[size][64];
+    int i = 0;
+    inFile = fopen(str, "r");
+  while(!feof(inFile)){
+        fgets(content, 255, (FILE*)inFile);
+        //printf("%s", content);
+        strcpy(fileStuff[i], content);
+        //printf("%s", fileStuff[i]);
+        //printf("%d", i);
+        i++;
+    }
+  if(size % 2 == 0){
+      int count = 0;
+      for(int i = 0; i < size-1; i+=2){
+          strcpy(result[count],fileStuff[i]);
+          printf("File now? %s\n", fileStuff[i]);
+          printf("Result now? %s\n", result[count]);
+          strcat(result[count], fileStuff[i+1]);
+          printf("beeeeees now? %s\n", fileStuff[i+1]);
+          printf("Result meow? %s\n", result[count]);
+          count++;
+      }
+  }
+    for (int k = 0; k < size; k++){
+        printf("%s\n", fileStuff[k]);
+    }
+    for(int i = 0; i < size/2; i++){
+        printf("Long boy%d: %s\n",i, result[i]);
+    }
+
+    fclose(inFile);
+}
+/*            FILE *cfPtr;
+
+            cfPtr = fopen("thisHash.txt", "r");
+            fscanf(cfPtr, "%40s\n", hash);
+            printf("Hash: %s\n",hash);
+            arrayHash[arrayCount] =hash;
+            printf("Array hash %d: %s\n", arrayCount, arrayHash[arrayCount]);
             arrayCount++;
         }
-        return treeHash(arrayHash);
-
     }
+    else{
+            for (int i =0; i < size-2;i+=2){ //Still needs to account for odd array lenghts
+                char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i+1]) + 1);
+                printf("Input: %s", inputHash[i]);
+                printf(" Input2: %s\n", inputHash[i+1]);
+                strcpy(result, inputHash[i]);
+                strcat(result, inputHash[i+1]);
+                printf("Combined Hash?: %s", result);
+                size_t len = strlen(result);
+                md5(result,len);
+                FILE *cfPtr;
+                cfPtr = fopen( "thisHash.txt", "r" );
+                fscanf(cfPtr, "%29s\n", hash);
+                strcpy(arrayHash[arrayCount], hash);
+                arrayCount++;
+            }
+            int lastHash = (size/2);
+            strcpy(arrayHash[lastHash], inputHash[size-1]);
+            arrayCount++;
 
-}
+        }
+    for(int i = 0; i < arrayCount; i++){
+        printf("Array %d: %s\n", i, arrayHash[i]);
+    }
+   // treeHash(arrayHash,arrayCount);
+}*/
+
