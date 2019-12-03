@@ -14,6 +14,7 @@
 // These vars will contain the hash
 uint8_t * concat(const char *s1, const uint8_t *s2);
 char * treeHash(char **inputHash,int size);
+void readEntireFile(char *);
 
 
 void md5(uint8_t *initial_msg, size_t initial_len) {
@@ -188,11 +189,11 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
 int main() {
 
 
-    char *msg = "Tes1t";
+    char *msg = "";
     size_t len = strlen(msg);
     // next 3 lines break code comment out if you are doing anything
-    char *tempArray[] = {"1","2","33","4","555","66","77","99","8","0"};
-    printf("%d\n", sizeof(tempArray));
+    char *tempArray[] = {"1","2","33","4","55","66","77","99","8","0"};
+    //printf("%d\n", sizeof(tempArray));
     int size = sizeof(tempArray)/ sizeof(tempArray[0]);
     char *prt = treeHash(tempArray,size);
     printf("%s",*prt);
@@ -224,14 +225,14 @@ uint8_t * concat(const char *s1, const uint8_t *s2)
 }
 //my attempt at hashing in tree order
 char * treeHash(char **inputHash,int size){
-    char hash[ 65 ];
-    char *arrayHash[33];
+    char hash[255];
+    char arrayHash[size][255];
     int arrayCount=0;
     int num = sizeof(**inputHash) / sizeof(*inputHash[0]);
-    printf("%d\n",num);
-    printf("%d\n",sizeof(inputHash));
-    printf("%d\n",sizeof(char));
-    puts("HELLO");
+    //printf("%d\n",num);
+    //printf("%d\n",sizeof(inputHash));
+    //printf("%d\n",sizeof(char));
+    //puts("HELLO");
     if(size==1){
         puts("FINAL HASH");
         printf("%s",inputHash[0]);
@@ -239,46 +240,105 @@ char * treeHash(char **inputHash,int size){
     }
     else {
         if (size % 2 == 0) {
+                printf("Even size %d\n", size);
             for (int i = 0; i < size-1; i += 2) { //Still needs to account for odd array lenghts
                 char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i + 1]) + 1);
-                printf("EVEN NUMBER %d",i);
-
+                printf("EVEN NUMBER %d\n",i);
                 strcpy(result, inputHash[i]);
+                printf("First val: %s :: ", inputHash[i]);
                 strcat(result, inputHash[i + 1]);
+                printf("Second val: %s\n", inputHash[i+1]);
                 size_t len = strlen(result);
+                printf("Resulting val: %s\n", result);
                 md5(result, len);
                 FILE *cfPtr;
-
                 cfPtr = fopen("thisHash.txt", "r");
                 fscanf(cfPtr, "%32s\n", hash);
-                arrayHash[arrayCount]= hash;
-                printf("%s",hash);
+                printf("Hash: %s\n", hash);
+                strcpy(arrayHash[arrayCount], hash);
+                printf("Array: %s\n", arrayHash[arrayCount]);
                 arrayCount++;
+                for(int q = 0; q < arrayCount; q++){
+                    printf("Array Elements inside loop:%d %s\n", q, arrayHash[q]);
+                }
             }
+            for(int i = 0; i < size/2; i++){
+            printf("Array elements:%d %s\n", i, arrayHash[i]);
+        }
         }
         else{
-            for (int i =0; i < size-2;i+=2){ //Still needs to account for odd array lenghts
-                char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i+1]) + 1);
-                printf("EVEN NUMBER %d",i);
-
+                printf("Odd size %d\n", size);
+            for (int i =0; i < size-2;i+=2){ //Still needs to account for odd array lengths
+                printf("Value for inputHash?: %s\n", inputHash[i]);
+                char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i+1]) +1);
+                printf("Odd NUMBER %d\n",i);
+                printf("Value for ih+1?: %s\n", inputHash[i+1]);
                 strcpy(result, inputHash[i]);
+
                 strcat(result, inputHash[i+1]);
+
+                printf("Result: %s\n", result);
                 size_t len = strlen(result);
                 md5(result,len);
                 FILE *cfPtr;
 
                 cfPtr = fopen( "thisHash.txt", "r" );
                 fscanf(cfPtr, "%32s\n", hash);
-                arrayHash[arrayCount]= hash;
+                printf("Hashed: %s\n", hash);
+                strcpy(arrayHash[arrayCount],hash);
+                printf("Array content: %s\n", arrayHash[arrayCount]);
                 arrayCount++;
             }
             int lastHash = (size/2);
-            arrayHash[lastHash]= inputHash[size-1];
+            strcpy(arrayHash[lastHash],inputHash[size-1]);
             arrayCount++;
-
+        for(int i = 0; i < size/2+1; i++){
+            printf("Array elements:%d %s\n", i, arrayHash[i]);
         }
-        return treeHash(arrayHash,arrayCount);
+        }
+        printf("Do i loop once?\n");
+        char * newString[] = {""};
+        for(int i = 0; i < arrayCount; i++){
+            printf("Array %d: %s\n", i, arrayHash[i]);
+            newString[i] = arrayHash[i];
+            printf("Saved %d: %s\n", i, newString[i]);
+        }
+        return treeHash(newString,arrayCount);
 
     }
 
+}
+
+void readEntireFile(char *str)
+{
+
+    char *source = NULL;
+        //FILE *fp = fopen("C:\\Users\\Brad Samack\\Documents\\School\\GVSU\\CIS\\290\\Samack, Brad Memo Nov 2019.pdf", "rb");
+        FILE *fp = fopen(str, "r");
+    if (fp != NULL) {
+    /* Go to the end of the file. */
+    }
+    if (fseek(fp, 0L, SEEK_END) == 0) {
+        /* Get the size of the file. */
+        long bufsize = ftell(fp);
+        if (bufsize == -1) { /* Error */ }
+
+        /* Allocate our buffer to that size. */
+        source = malloc(sizeof(char) * (bufsize + 1));
+
+        /* Go back to the start of the file. */
+        if (fseek(fp, 0L, SEEK_SET) != 0) { /* Error */ }
+
+        /* Read the entire file into memory. */
+        size_t newLen = fread(source, sizeof(char), bufsize, fp);
+        if ( ferror( fp ) != 0 ) {
+            fputs("Error reading file", stderr);
+        } else {
+            source[newLen++] = '\0'; /* Just to be safe. */
+        }
+    }
+
+        // Add this chunk's hash to result so far:
+    printf("%s", source);
+    fclose(fp);
 }
