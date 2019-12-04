@@ -36,6 +36,7 @@ int main() {
         printf("MSG...%d: %s\n\n",i, msg[i]);
         printf("Content:\n");
         fileContent[i] = readEntireFile(msg[i]);
+        printf("...CONTENT IN FILE %s\n", fileContent[i]);
     }
     size_t len;
     for(int i = 0; i <= size2; i++){
@@ -43,10 +44,11 @@ int main() {
         printf("Size... %d\n", len);
         md52(fileContent[i],len,i);
     }
-    char * hashy[] = {""};
+
+    char * hashy[size2];
     int size = lineByline("theseHash.txt", hashy);
     for(int i = 0; i < size; i++){
-        printf("MSG...%d: %s\n\n",i, hashy[i]);
+        printf("MSG...%d: %s\n",i, hashy[i]);
     }
     char *ptr = treeHash(hashy,size);
     printf("...Top Hash... = %s\n",ptr);
@@ -154,43 +156,50 @@ char * treeHash(char **inputHash,int size){
 int lineByline(char *str, char *paths[]){
     FILE* inFile;
     printf("Im in boies...\n");
-    unsigned char content[255];
-    unsigned char *fileStuff[255][255];
     int i = 0;
+    long bufSize;
     inFile = fopen(str, "r");
     if(inFile != NULL){
         printf("Open success!\n");
     }
     if (fseek(inFile, 0L, SEEK_END) == 0) {
             /* Get the size of the file. */
-            long bufSize = ftell(inFile);
+            bufSize = ftell(inFile);
             printf("Long boy: %d\n", bufSize);
             if (bufSize == -1) { /* Error */ }
 
-            unsigned char * fileStuff[bufSize][255];
             /* Allocate our buffer to that size. */
     }
         /* Go back to the start of the file. */
         fseek(inFile, 0L, SEEK_SET) != 0; { /* Error */ }
-
+	printf("%ld\n",bufSize);
+	char ** fileStuff = malloc(bufSize * sizeof(char*)+1);
+	for(int i = 0; i < bufSize; i++){
+	  fileStuff[i] = malloc((255) * sizeof(char)+ 1);
+	}
+	
     int count = 0;
     while(!feof(inFile)){
         fgets(fileStuff[count], 255, inFile);
         printf("Content.....%s", fileStuff[count]);
         printf("....Count is: %d\n", count);
+	printf("%ld\n", bufSize);
         char *pos;
         if ((pos = strchr(fileStuff[count], '\n')) != NULL){
-            //printf("take away space?");
+	  //printf("take away space?");
             *pos = '\0';
         }
         //printf("Stuff:...%s...\n", fileStuff[count]);
-        ++count;
+        count++;
+      
     }
+    printf("out of hell\n");
     for (int k = 0; k < count; k++){
-        //printf("%s\n", fileStuff[k]);
+        printf("%s\n", fileStuff[k]);
+	printf("VALUE IS: %d", k);
         paths[k] = fileStuff[k];
-
     }
+    printf("Everything is going really good right meow\n");
 
     fclose(inFile);
     return count-1;
@@ -208,6 +217,7 @@ char * readEntireFile(char *str)
     }
     else{
         printf("File was not opened...\n");
+	return "";
     }
     if (fseek(fp, 0L, SEEK_END) == 0) {
         /* Get the size of the file. */
