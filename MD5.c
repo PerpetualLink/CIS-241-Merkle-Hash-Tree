@@ -14,7 +14,8 @@
 // These vars will contain the hash
 uint8_t * concat(const char *s1, const uint8_t *s2);
 char * treeHash(char **inputHash,int size);
-void readEntireFile(char *);
+void readEntireFile(char *, char *);
+int lineByline(char *, char *[]);
 
 
 void md5(uint8_t *initial_msg, size_t initial_len) {
@@ -189,17 +190,27 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
 int main() {
 
 
-    char *msg = "";
-    size_t len = strlen(msg);
-    // next 3 lines break code comment out if you are doing anything
+    char * msg[] = {""};
+    int size2 = 0;
+    printf("Starting...\n");
+    size2 = lineByline("Paths.txt", msg);
+    printf("File Read...");
+    printf(" ..Size of file: %d...\n", size2);
+    printf("... Contents in msg ...\n");
+
+    char * fileContent[size2];
+    for(int i = 0; i < size2; i++){
+        printf("MSG...%d: %s\n\n",i, msg[i]);
+        printf("Content:\n");
+        readEntireFile(msg[i],fileContent[i]);
+       //printf("..................\n%s", fileContent[i]);
+    }
+
     char *tempArray[] = {"1","2","33","4","55","66","77","99","8","0"};
-    //printf("%d\n", sizeof(tempArray));
     int size = sizeof(tempArray)/ sizeof(tempArray[0]);
+
     char *prt = treeHash(tempArray,size);
-    printf("%s",*prt);
-    // printf("%d\n", sizeof(tempArray));
-    //aff080e13d4b8d5381316fea34239
-    //30c8cd162678f558638a55e3b3fb9fc2
+    printf("Resulting prt: %s\n",prt);
 
 
 
@@ -216,41 +227,33 @@ int main() {
 
     return 0;
 }
-uint8_t * concat(const char *s1, const uint8_t *s2)
-{
-//    uint32_t *result = malloc(strlen(s1) + strlen(s2) + 1);
-//    strcpy(result, s1);
-//    strcat(result, s2);
-//    return result;
-}
+
 //my attempt at hashing in tree order
 char * treeHash(char **inputHash,int size){
     char hash[255];
     char arrayHash[size][255];
     int arrayCount=0;
     int num = sizeof(**inputHash) / sizeof(*inputHash[0]);
-    //printf("%d\n",num);
-    //printf("%d\n",sizeof(inputHash));
-    //printf("%d\n",sizeof(char));
-    //puts("HELLO");
+
     if(size==1){
         puts("FINAL HASH");
-        printf("%s",inputHash[0]);
+        printf("%s\n",inputHash[0]);
         return *inputHash;
     }
     else {
         if (size % 2 == 0) {
                 printf("Even size %d\n", size);
-            for (int i = 0; i < size-1; i += 2) { //Still needs to account for odd array lenghts
+            for (int i = 0; i < size-1; i += 2) {
                 char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i + 1]) + 1);
-                printf("EVEN NUMBER %d\n",i);
+
                 strcpy(result, inputHash[i]);
                 printf("First val: %s :: ", inputHash[i]);
                 strcat(result, inputHash[i + 1]);
-                printf("Second val: %s\n", inputHash[i+1]);
+                printf("Second val: %s\n\n", inputHash[i+1]);
                 size_t len = strlen(result);
                 printf("Resulting val: %s\n", result);
                 md5(result, len);
+
                 FILE *cfPtr;
                 cfPtr = fopen("thisHash.txt", "r");
                 fscanf(cfPtr, "%32s\n", hash);
@@ -258,17 +261,12 @@ char * treeHash(char **inputHash,int size){
                 strcpy(arrayHash[arrayCount], hash);
                 printf("Array: %s\n", arrayHash[arrayCount]);
                 arrayCount++;
-                for(int q = 0; q < arrayCount; q++){
-                    printf("Array Elements inside loop:%d %s\n", q, arrayHash[q]);
-                }
+                fclose(cfPtr);
             }
-            for(int i = 0; i < size/2; i++){
-            printf("Array elements:%d %s\n", i, arrayHash[i]);
-        }
         }
         else{
                 printf("Odd size %d\n", size);
-            for (int i =0; i < size-2;i+=2){ //Still needs to account for odd array lengths
+            for (int i =0; i < size-2;i+=2){
                 printf("Value for inputHash?: %s\n", inputHash[i]);
                 char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i+1]) +1);
                 printf("Odd NUMBER %d\n",i);
@@ -288,6 +286,7 @@ char * treeHash(char **inputHash,int size){
                 strcpy(arrayHash[arrayCount],hash);
                 printf("Array content: %s\n", arrayHash[arrayCount]);
                 arrayCount++;
+                fclose(cfPtr);
             }
             int lastHash = (size/2);
             strcpy(arrayHash[lastHash],inputHash[size-1]);
@@ -295,8 +294,7 @@ char * treeHash(char **inputHash,int size){
         for(int i = 0; i < size/2+1; i++){
             printf("Array elements:%d %s\n", i, arrayHash[i]);
         }
-        }
-        printf("Do i loop once?\n");
+    }
         char * newString[] = {""};
         for(int i = 0; i < arrayCount; i++){
             printf("Array %d: %s\n", i, arrayHash[i]);
@@ -308,15 +306,58 @@ char * treeHash(char **inputHash,int size){
     }
 
 }
+int lineByline(char *str, char *paths[]){
+    FILE* inFile;
+    printf("Im in boies...\n");
+    unsigned char content[255];
+    unsigned char *fileStuff[255][255];
+    int i = 0;
+    inFile = fopen(str, "r");
+    if(inFile != NULL){
+        printf("Open success!\n");
+    }
+    if (fseek(inFile, 0L, SEEK_END) == 0) {
+            /* Get the size of the file. */
+            long bufSize = ftell(inFile);
+            printf("Long boy: %d\n", bufSize);
+            if (bufSize == -1) { /* Error */ }
 
-void readEntireFile(char *str)
+            unsigned char * fileStuff[bufSize][255];
+            /* Allocate our buffer to that size. */
+    }
+        /* Go back to the start of the file. */
+        fseek(inFile, 0L, SEEK_SET) != 0; { /* Error */ }
+
+    int count = 0;
+    while(!feof(inFile)){
+        fgets(fileStuff[count], 255, inFile);
+        char *pos;
+        if ((pos=strchr(fileStuff[count], '\n')) != NULL)
+            *pos = '\0';
+        //printf("Stuff:...%s...\n", fileStuff[count]);
+        count ++;
+    }
+    for (int k = 0; k < count; k++){
+        printf("%s", fileStuff[k]);
+        paths[k] = fileStuff[k];
+    }
+
+    fclose(inFile);
+    return count - 1;
+}
+
+void readEntireFile(char *str, char *bigstr)
 {
 
     char *source = NULL;
         //FILE *fp = fopen("C:\\Users\\Brad Samack\\Documents\\School\\GVSU\\CIS\\290\\Samack, Brad Memo Nov 2019.pdf", "rb");
         FILE *fp = fopen(str, "r");
     if (fp != NULL) {
+            printf("File was opened!\n");
     /* Go to the end of the file. */
+    }
+    else{
+        printf("File was not opened...\n");
     }
     if (fseek(fp, 0L, SEEK_END) == 0) {
         /* Get the size of the file. */
@@ -327,18 +368,20 @@ void readEntireFile(char *str)
         source = malloc(sizeof(char) * (bufsize + 1));
 
         /* Go back to the start of the file. */
-        if (fseek(fp, 0L, SEEK_SET) != 0) { /* Error */ }
+    if (fseek(fp, 0L, SEEK_SET) != 0) { /* Error */ }
 
-        /* Read the entire file into memory. */
-        size_t newLen = fread(source, sizeof(char), bufsize, fp);
-        if ( ferror( fp ) != 0 ) {
-            fputs("Error reading file", stderr);
-        } else {
-            source[newLen++] = '\0'; /* Just to be safe. */
-        }
+    /* Read the entire file into memory. */
+    size_t newLen = fread(source, sizeof(char), bufsize, fp);
+    if ( ferror( fp ) != 0 ) {
+        fputs("Error reading file", stderr);
+    }
+    else {
+        source[newLen++] = '\0'; /* Just to be safe. */
+    }
     }
 
         // Add this chunk's hash to result so far:
-    printf("%s", source);
+    //printf("%s", source);
+    bigstr = source;
     fclose(fp);
 }
