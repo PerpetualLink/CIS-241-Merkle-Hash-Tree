@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <limits.h>
 
 // leftrotate function definition
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
@@ -16,6 +17,224 @@ uint8_t * concat(const char *s1, const uint8_t *s2);
 char * treeHash(char **inputHash,int size);
 char * readEntireFile(char *);
 int lineByline(char *, char *[]);
+void md52(uint8_t*,size_t,int);
+void md5(uint8_t*,size_t);
+
+int main() {
+
+
+    char * msg[10000];
+    int size2 = 0;
+    printf("Starting...\n");
+    size2 = lineByline("Paths.txt", msg);
+    printf("File Read...");
+    printf(" ..Size of file: %d...\n", size2);
+    printf("... Contents in msg ...\n");
+
+    char * fileContent[size2];
+    for(int i = 0; i <= size2; i++){
+        printf("MSG...%d: %s\n\n",i, msg[i]);
+        printf("Content:\n");
+        fileContent[i] = readEntireFile(msg[i]);
+    }
+    size_t len;
+    for(int i = 0; i <= size2; i++){
+        len = strlen(fileContent[i]);
+        printf("Size... %d\n", len);
+        md52(fileContent[i],len,i);
+    }
+    char * hashy[] = {""};
+    int size = lineByline("theseHash.txt", hashy);
+    for(int i = 0; i < size; i++){
+        printf("MSG...%d: %s\n\n",i, hashy[i]);
+    }
+    char *ptr = treeHash(hashy,size);
+    printf("...Top Hash... = %s\n",ptr);
+
+    FILE *top;
+    top = fopen("topHash.txt", "r");
+    if(top == NULL){
+        top = fopen("topHash.txt","w");
+        fprintf(top,"%s",ptr);
+        fclose(top);
+        printf("...Top Hash Saved...\n");
+        return 0;
+    }
+    else{
+        char pastTop[32];
+        fscanf(top,"%s",pastTop);
+        fclose(top);
+        if (!strcmp(pastTop, ptr)){
+            printf("...Files were not changed...\n");
+        }
+        else{
+            printf("...\aFiles were changed... Top Hash not the same.\n");
+            return -1;
+        }
+    }
+}
+
+//my attempt at hashing in tree order
+char * treeHash(char **inputHash,int size){
+    char hash[255];
+    char arrayHash[size][255];
+    int arrayCount=0;
+    int num = sizeof(**inputHash) / sizeof(*inputHash[0]);
+
+    if(size==1){
+        //puts("FINAL HASH");
+        //printf("%s\n",inputHash[0]);
+        return *inputHash;
+    }
+    else {
+        if (size % 2 == 0) {
+                //printf("Even size %d\n", size);
+            for (int i = 0; i < size-1; i += 2) {
+                char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i + 1]) + 1);
+
+                strcpy(result, inputHash[i]);
+                //printf("First val: %s :: ", inputHash[i]);
+                strcat(result, inputHash[i + 1]);
+                //printf("Second val: %s\n\n", inputHash[i+1]);
+                size_t len = strlen(result);
+                //printf("Resulting val: %s\n", result);
+                md5(result, len);
+
+                FILE *cfPtr;
+                cfPtr = fopen("thisHash.txt", "r");
+                fscanf(cfPtr, "%32s\n", hash);
+                //printf("Hash: %s\n", hash);
+                strcpy(arrayHash[arrayCount], hash);
+                //printf("Array: %s\n", arrayHash[arrayCount]);
+                arrayCount++;
+                fclose(cfPtr);
+            }
+        }
+        else{
+                //printf("Odd size %d\n", size);
+            for (int i =0; i < size-2;i+=2){
+                //printf("Value for inputHash?: %s\n", inputHash[i]);
+                char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i+1]) +1);
+                //printf("Odd NUMBER %d\n",i);
+                //printf("Value for ih+1?: %s\n", inputHash[i+1]);
+                strcpy(result, inputHash[i]);
+
+                strcat(result, inputHash[i+1]);
+
+                //printf("Result: %s\n", result);
+                size_t len = strlen(result);
+                md5(result,len);
+                FILE *cfPtr;
+
+                cfPtr = fopen( "thisHash.txt", "r" );
+                fscanf(cfPtr, "%32s\n", hash);
+                //printf("Hashed: %s\n", hash);
+                strcpy(arrayHash[arrayCount],hash);
+                //printf("Array content: %s\n", arrayHash[arrayCount]);
+                arrayCount++;
+                fclose(cfPtr);
+            }
+            int lastHash = (size/2);
+            strcpy(arrayHash[lastHash],inputHash[size-1]);
+            arrayCount++;
+//        for(int i = 0; i < size/2+1; i++){
+//            printf("Array elements:%d %s\n", i, arrayHash[i]);
+//        }
+    }
+        char * newString[arrayCount];
+        for(int i = 0; i < arrayCount; i++){
+            printf("Hash Values in tree %d: %s\n", i, arrayHash[i]);
+            newString[i] = arrayHash[i];
+            //printf("Saved %d: %s\n", i, newString[i]);
+        }
+        return treeHash(newString,arrayCount);
+    }
+
+}
+int lineByline(char *str, char *paths[]){
+    FILE* inFile;
+    printf("Im in boies...\n");
+    unsigned char content[255];
+    unsigned char *fileStuff[255][255];
+    int i = 0;
+    inFile = fopen(str, "r");
+    if(inFile != NULL){
+        printf("Open success!\n");
+    }
+    if (fseek(inFile, 0L, SEEK_END) == 0) {
+            /* Get the size of the file. */
+            long bufSize = ftell(inFile);
+            printf("Long boy: %d\n", bufSize);
+            if (bufSize == -1) { /* Error */ }
+
+            unsigned char * fileStuff[bufSize][255];
+            /* Allocate our buffer to that size. */
+    }
+        /* Go back to the start of the file. */
+        fseek(inFile, 0L, SEEK_SET) != 0; { /* Error */ }
+
+    int count = 0;
+    while(!feof(inFile)){
+        fgets(fileStuff[count], 255, inFile);
+        printf("Content.....%s", fileStuff[count]);
+        printf("....Count is: %d\n", count);
+        char *pos;
+        if ((pos = strchr(fileStuff[count], '\n')) != NULL){
+            //printf("take away space?");
+            *pos = '\0';
+        }
+        //printf("Stuff:...%s...\n", fileStuff[count]);
+        ++count;
+    }
+    for (int k = 0; k < count; k++){
+        //printf("%s\n", fileStuff[k]);
+        paths[k] = fileStuff[k];
+
+    }
+
+    fclose(inFile);
+    return count-1;
+}
+
+char * readEntireFile(char *str)
+{
+
+    char *source = NULL;
+        //FILE *fp = fopen("C:\\Users\\Brad Samack\\Documents\\School\\GVSU\\CIS\\290\\Samack, Brad Memo Nov 2019.pdf", "rb");
+        FILE *fp = fopen(str, "r");
+    if (fp != NULL) {
+            printf("File was opened!\n");
+    /* Go to the end of the file. */
+    }
+    else{
+        printf("File was not opened...\n");
+    }
+    if (fseek(fp, 0L, SEEK_END) == 0) {
+        /* Get the size of the file. */
+        long bufsize = ftell(fp);
+        if (bufsize == -1) { /* Error */ }
+
+        /* Allocate our buffer to that size. */
+        source = malloc(sizeof(char) * (bufsize + 1));
+
+        /* Go back to the start of the file. */
+    if (fseek(fp, 0L, SEEK_SET) != 0) { /* Error */ }
+
+    /* Read the entire file into memory. */
+    size_t newLen = fread(source, sizeof(char), bufsize, fp);
+    if ( ferror( fp ) != 0 ) {
+        fputs("Error reading file", stderr);
+    }
+    else {
+        source[newLen++] = '\0'; /* Just to be safe. */
+    }
+    }
+        // Add this chunk's hash to result so far:
+    //printf("%s", source);
+
+    fclose(fp);
+    return source;
+}
 
 void md52(uint8_t *initial_msg, size_t initial_len, int wa) {
 
@@ -356,202 +575,4 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
     fclose(hashFile);
     free(msg);
 
-}
-
-int main() {
-
-
-    char * msg[] = {" "};
-    int size2 = 0;
-    printf("Starting...\n");
-    size2 = lineByline("Paths.txt", msg);
-    printf("File Read...");
-    printf(" ..Size of file: %d...\n", size2);
-    printf("... Contents in msg ...\n");
-
-    char * fileContent[size2];
-    for(int i = 0; i < size2; i++){
-        printf("MSG...%d: %s\n\n",i, msg[i]);
-        printf("Content:\n");
-        fileContent[i] = readEntireFile(msg[i]);
-    }
-    size_t len;
-    for(int i = 0; i < size2; i++){
-        len = strlen(fileContent[i]);
-        printf("Size... %d\n", len);
-        md52(fileContent[i],len,i);
-    }
-    char * hashy[] = {""};
-    int size = lineByline("theseHash.txt", hashy);
-    for(int i = 0; i < size; i++){
-        printf("MSG...%d: %s\n\n",i, hashy[i]);
-    }
-    char *prt = treeHash(hashy,size);
-    printf("...Top Hash... = %s\n",prt);
-
-    return 0;
-}
-
-//my attempt at hashing in tree order
-char * treeHash(char **inputHash,int size){
-    char hash[255];
-    char arrayHash[size][255];
-    int arrayCount=0;
-    int num = sizeof(**inputHash) / sizeof(*inputHash[0]);
-
-    if(size==1){
-        //puts("FINAL HASH");
-        //printf("%s\n",inputHash[0]);
-        return *inputHash;
-    }
-    else {
-        if (size % 2 == 0) {
-                //printf("Even size %d\n", size);
-            for (int i = 0; i < size-1; i += 2) {
-                char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i + 1]) + 1);
-
-                strcpy(result, inputHash[i]);
-                //printf("First val: %s :: ", inputHash[i]);
-                strcat(result, inputHash[i + 1]);
-                //printf("Second val: %s\n\n", inputHash[i+1]);
-                size_t len = strlen(result);
-                //printf("Resulting val: %s\n", result);
-                md5(result, len);
-
-                FILE *cfPtr;
-                cfPtr = fopen("thisHash.txt", "r");
-                fscanf(cfPtr, "%32s\n", hash);
-                //printf("Hash: %s\n", hash);
-                strcpy(arrayHash[arrayCount], hash);
-                //printf("Array: %s\n", arrayHash[arrayCount]);
-                arrayCount++;
-                fclose(cfPtr);
-            }
-        }
-        else{
-                //printf("Odd size %d\n", size);
-            for (int i =0; i < size-2;i+=2){
-                //printf("Value for inputHash?: %s\n", inputHash[i]);
-                char *result = malloc(strlen(inputHash[i]) + strlen(inputHash[i+1]) +1);
-                //printf("Odd NUMBER %d\n",i);
-                //printf("Value for ih+1?: %s\n", inputHash[i+1]);
-                strcpy(result, inputHash[i]);
-
-                strcat(result, inputHash[i+1]);
-
-                //printf("Result: %s\n", result);
-                size_t len = strlen(result);
-                md5(result,len);
-                FILE *cfPtr;
-
-                cfPtr = fopen( "thisHash.txt", "r" );
-                fscanf(cfPtr, "%32s\n", hash);
-                //printf("Hashed: %s\n", hash);
-                strcpy(arrayHash[arrayCount],hash);
-                //printf("Array content: %s\n", arrayHash[arrayCount]);
-                arrayCount++;
-                fclose(cfPtr);
-            }
-            int lastHash = (size/2);
-            strcpy(arrayHash[lastHash],inputHash[size-1]);
-            arrayCount++;
-//        for(int i = 0; i < size/2+1; i++){
-//            printf("Array elements:%d %s\n", i, arrayHash[i]);
-//        }
-    }
-        char * newString[] = {""};
-        for(int i = 0; i < arrayCount; i++){
-            printf("Hash Values in tree %d: %s\n", i, arrayHash[i]);
-            newString[i] = arrayHash[i];
-            //printf("Saved %d: %s\n", i, newString[i]);
-        }
-        return treeHash(newString,arrayCount);
-
-    }
-
-}
-int lineByline(char *str, char *paths[]){
-    FILE* inFile;
-    char bleh[] = {""};
-    printf("Im in boies...\n");
-    unsigned char content[255];
-    unsigned char *fileStuff[255][255];
-    int i = 0;
-    inFile = fopen(str, "r");
-    if(inFile != NULL){
-        printf("Open success!\n");
-    }
-    if (fseek(inFile, 0L, SEEK_END) == 0) {
-            /* Get the size of the file. */
-            long bufSize = ftell(inFile);
-            printf("Long boy: %d\n", bufSize);
-            if (bufSize == -1) { /* Error */ }
-
-            unsigned char * fileStuff[bufSize][255];
-            /* Allocate our buffer to that size. */
-    }
-        /* Go back to the start of the file. */
-        fseek(inFile, 0L, SEEK_SET) != 0; { /* Error */ }
-
-    int count = 0;
-    while(!feof(inFile)){
-        fgets(fileStuff[count], 255, inFile);
-        printf("Content.....%s\n", fileStuff[count]);
-        char *pos;
-        if ((pos = strchr(fileStuff[count], '\n')) != NULL){
-            //printf("take away space?");
-            *pos = '\0';
-        }
-        //printf("Stuff:...%s...\n", fileStuff[count]);
-        ++count;
-    }
-    for (int k = 0; k < ; k++){
-        //printf("%s\n", fileStuff[k]);
-        [k] = fileStuff[k];
-        paths[k] = bleh[k];
-    }
-
-    fclose(inFile);
-    return count-1;
-}
-
-char * readEntireFile(char *str)
-{
-
-    char *source = NULL;
-        //FILE *fp = fopen("C:\\Users\\Brad Samack\\Documents\\School\\GVSU\\CIS\\290\\Samack, Brad Memo Nov 2019.pdf", "rb");
-        FILE *fp = fopen(str, "r");
-    if (fp != NULL) {
-            printf("File was opened!\n");
-    /* Go to the end of the file. */
-    }
-    else{
-        printf("File was not opened...\n");
-    }
-    if (fseek(fp, 0L, SEEK_END) == 0) {
-        /* Get the size of the file. */
-        long bufsize = ftell(fp);
-        if (bufsize == -1) { /* Error */ }
-
-        /* Allocate our buffer to that size. */
-        source = malloc(sizeof(char) * (bufsize + 1));
-
-        /* Go back to the start of the file. */
-    if (fseek(fp, 0L, SEEK_SET) != 0) { /* Error */ }
-
-    /* Read the entire file into memory. */
-    size_t newLen = fread(source, sizeof(char), bufsize, fp);
-    if ( ferror( fp ) != 0 ) {
-        fputs("Error reading file", stderr);
-    }
-    else {
-        source[newLen++] = '\0'; /* Just to be safe. */
-    }
-    }
-
-        // Add this chunk's hash to result so far:
-    //printf("%s", source);
-
-    fclose(fp);
-    return source;
 }
