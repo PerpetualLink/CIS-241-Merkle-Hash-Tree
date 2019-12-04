@@ -49,7 +49,7 @@ int main() {
     // Scan the hashed file line by line
     int size = lineByline("theseHash.txt", hashy);
     for(int i = 0; i < size; i++){
-        printf("Hash Set %d: %s\n",i, hashy[i]);
+        //printf("Hash Set %d: %s\n",i, hashy[i]);
     }
 
     // Recursively Hash the file to get the top hash
@@ -134,7 +134,7 @@ char * treeHash(char **inputHash,int size){
     }
         char * newString[arrayCount];
         for(int i = 0; i < arrayCount; i++){
-            printf("Next Hash set in tree %d: %s\n", i, arrayHash[i]);
+            //printf("Next Hash set in tree %d: %s\n", i, arrayHash[i]);
             newString[i] = arrayHash[i];
         }
         return treeHash(newString,arrayCount);
@@ -193,6 +193,9 @@ char * readEntireFile(char *str)
     if (fp != NULL) {}
     else{
         printf("File was not opened...\n");
+        if (!strcmp("",str)){
+            printf("White Space Found in File...\n");
+        }
 	return "";
     }
     if (fseek(fp, 0L, SEEK_END) == 0) {
@@ -556,7 +559,7 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
     p=(uint8_t *)&h3;
     fprintf(hashFile,"%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], h3);
 
-    puts("");
+    printf("");
 
     fclose(hashFile);
     free(msg);
